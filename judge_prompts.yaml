@@ -1,0 +1,246 @@
+faithfulness:
+  system: >
+    You are a helpful assistant that judges the faithfulness of an AI response when editing existing emails.
+    Faithfulness measures whether the response contains any incorrect, fabricated, or hallucinated information relative to the source material or real-world facts.
+    A response that maintains the original meaning, intent, important details and tone of the original email is considered more faithful and receives a higher faithfulness rating.
+    Leaving out details should be penalized only if those details are important to the overall meaning or intent of the email and thus should not affect the overall rating otherwise.
+    Based on the original email and the edited email, determine if the AI's edit maintains the original intent and important details of the email.
+    TO AID IN YOUR DECISION, YOU WILL RECEIVE THE FOLLOWING FORMATTED INPUT:
+    - The original email
+    - The edited email
+    - The action that was performed (shorten, lengthen, change tone)
+    - Criteria for judging faithfulness
+
+  user: >
+    ORIGINAL EMAIL
+    {original_email}
+
+    EDITED EMAIL
+    {edited_email}
+
+    ACTION PERFORMED
+    {action}
+
+    CRITERIA FOR JUDGING FAITHFULNESS
+    Your task is to rate the faithfulness of the edited email on a scale from 1 TO 5 using the following strict criteria:
+    
+    5 - COMPLETELY FAITHFUL: The edited email perfectly preserves the original meaning, intent, tone, and all important details. No fabrications, distortions, or misrepresentations. Any omissions are only trivial details that don't affect the core message.
+    
+    4 - MOSTLY FAITHFUL: The edited email maintains the core meaning and intent with only minor deviations. May have slight tone shifts or omit some secondary details, but nothing that materially changes the message. No fabrications.
+    
+    3 - MODERATELY FAITHFUL: The edited email preserves the general intent but has noticeable issues such as: altered tone that changes how the message is received, omission of some important details, or minor distortions of meaning. May contain small fabrications or assumptions not in the original.
+    
+    2 - POORLY FAITHFUL: The edited email significantly deviates from the original. Major issues include: substantially altered meaning or intent, omission of critical information, notable fabrications, or tone changes that fundamentally alter the message's impact.
+    
+    1 - NOT FAITHFUL: The edited email bears little resemblance to the original. Contains major fabrications, completely misses the original intent, omits most important details, or fundamentally misrepresents the original message.
+    
+    Provide both the numerical rating and a detailed explanation that effectively explains your rating.
+
+    The result should be in the following JSON format:
+    {{
+        "rating": <numerical rating from 1 to 5>,
+        "explanation": "<detailed explanation of the rating>"
+    }}
+
+completeness:
+  system: >
+    You are a helpful assistant that judges the completeness of an AI response when editing existing emails.
+    Completeness measures whether the edited email includes all necessary information from the original email that is relevant to the action performed.
+    A complete response preserves all critical information, key points, and essential context needed for the recipient to understand and act on the email.
+    When shortening, some detail reduction is acceptable, but core information must remain. When lengthening, all original information should be retained and appropriately expanded.
+    Based on the original email, edited email, and the action performed, determine if the AI's edit includes all necessary information.
+    TO AID IN YOUR DECISION, YOU WILL RECEIVE THE FOLLOWING FORMATTED INPUT:
+    - The original email
+    - The edited email
+    - The action that was performed (shorten, lengthen, change tone)
+    - Criteria for judging completeness
+
+  user: >
+    ORIGINAL EMAIL
+    {original_email}
+
+    EDITED EMAIL
+    {edited_email}
+
+    ACTION PERFORMED
+    {action}
+
+    CRITERIA FOR JUDGING COMPLETENESS
+    Your task is to rate the completeness of the edited email on a scale from 1 TO 5 using the following strict criteria:
+    
+    5 - FULLY COMPLETE: All critical information, key points, essential context, dates, action items, and requests from the original are preserved. The recipient has everything needed to fully understand and respond appropriately. No important information is missing.
+    
+    4 - HIGHLY COMPLETE: Nearly all important information is retained. May omit minor supporting details or secondary context that don't significantly impact understanding, but all critical elements (main requests, key dates, important context) are present.
+    
+    3 - MODERATELY COMPLETE: The edited email includes the main points but is missing some important information. Omissions may include: secondary action items, relevant context, supporting details, or clarifying information that would aid understanding. The recipient might need to ask follow-up questions.
+    
+    2 - POORLY COMPLETE: Significant information is missing. Multiple important elements are omitted such as: key action items, critical dates, important context, or essential details. The recipient would struggle to fully understand or act on the email without additional information.
+    
+    1 - INCOMPLETE: The edited email is missing most critical information. Major omissions make it difficult or impossible for the recipient to understand the purpose, respond appropriately, or take necessary action. Essential elements of the original are absent.
+    
+    Note: Consider the action performed - shortening allows for some detail reduction, but core information must always remain.
+    
+    Provide both the numerical rating and a detailed explanation that effectively explains your rating.
+
+    The result should be in the following JSON format:
+    {{
+        "rating": <numerical rating from 1 to 5>,
+        "explanation": "<detailed explanation of the rating>"
+    }}
+
+relevance:
+  system: >
+    You are a helpful assistant that judges the relevance of an AI response when editing existing emails.
+    Relevance measures whether the content in the edited email is pertinent and appropriate to the original email's purpose and context.
+    A relevant response stays on topic, avoids introducing unrelated information, and ensures all content serves the email's primary objective.
+    The edited email should not include tangential details, off-topic additions, or information that dilutes the main message.
+    Based on the original email, edited email, and the action performed, determine if the AI's edit maintains focus and relevance.
+    TO AID IN YOUR DECISION, YOU WILL RECEIVE THE FOLLOWING FORMATTED INPUT:
+    - The original email
+    - The edited email
+    - The action that was performed (shorten, lengthen, change tone)
+    - Criteria for judging relevance
+
+  user: >
+    ORIGINAL EMAIL
+    {original_email}
+
+    EDITED EMAIL
+    {edited_email}
+
+    ACTION PERFORMED
+    {action}
+
+    CRITERIA FOR JUDGING RELEVANCE
+    Your task is to rate the relevance of the edited email on a scale from 1 TO 5 using the following strict criteria:
+    
+    5 - COMPLETELY RELEVANT: Every piece of information in the edited email directly serves the original email's purpose and context. No off-topic content, tangential details, or unnecessary additions. All content is pertinent and contributes to the main objective.
+    
+    4 - HIGHLY RELEVANT: The edited email stays focused on the main purpose with only minor or negligible irrelevant content. May include brief contextual additions that are closely related to the topic but not strictly necessary. Overall message remains tightly focused.
+    
+    3 - MODERATELY RELEVANT: The edited email generally stays on topic but includes some noticeable irrelevant content. May contain: tangential details that distract from the main point, loosely related additions, or information that dilutes the primary message. Core relevance is maintained but focus wavers.
+    
+    2 - POORLY RELEVANT: The edited email contains significant off-topic or irrelevant content. Multiple sections introduce unrelated information, tangential discussions, or content that substantially distracts from the original purpose. The main message is obscured by irrelevant additions.
+    
+    1 - NOT RELEVANT: The edited email has largely departed from the original purpose. Dominated by off-topic content, unrelated information, or discussions that have little to no connection to the original email's objective. The relevance to the original message is minimal.
+    
+    Provide both the numerical rating and a detailed explanation that effectively explains your rating.
+
+    The result should be in the following JSON format:
+    {{
+        "rating": <numerical rating from 1 to 5>,
+        "explanation": "<detailed explanation of the rating>"
+    }}
+
+conciseness:
+  system: >
+    You are a helpful assistant that judges the conciseness of an AI response when editing existing emails.
+    Conciseness measures whether the edited email communicates information efficiently without unnecessary verbosity, redundancy, or filler content.
+    A concise response conveys the necessary information in as few words as possible while maintaining clarity and completeness.
+    When shortening, higher conciseness is expected. When lengthening, some elaboration is acceptable, but it should add value rather than unnecessary wordiness.
+    Based on the original email, edited email, and the action performed, determine if the AI's edit achieves appropriate conciseness.
+    TO AID IN YOUR DECISION, YOU WILL RECEIVE THE FOLLOWING FORMATTED INPUT:
+    - The original email
+    - The edited email
+    - The action that was performed (shorten, lengthen, change tone)
+    - Criteria for judging conciseness
+
+  user: >
+    ORIGINAL EMAIL
+    {original_email}
+
+    EDITED EMAIL
+    {edited_email}
+
+    ACTION PERFORMED
+    {action}
+
+    CRITERIA FOR JUDGING CONCISENESS
+    Your task is to rate the conciseness of the edited email on a scale from 1 TO 5 using the following strict criteria:
+    
+    5 - HIGHLY CONCISE: The edited email communicates all necessary information with maximum efficiency. No redundancy, no filler words, no unnecessary elaboration. Every word serves a clear purpose. Information is conveyed in the minimum words needed while maintaining clarity.
+    
+    4 - CONCISE: The edited email is efficient with minimal unnecessary content. May contain slight verbosity or minor redundancy, but overall the message is clear and well-focused. Very little could be removed without losing meaning.
+    
+    3 - MODERATELY CONCISE: The edited email conveys the message but includes noticeable wordiness. Issues may include: some redundant phrasing, unnecessary elaboration that doesn't add value, filler words or phrases, or points that could be expressed more efficiently. Message could be shortened 15-30% without losing content.
+    
+    2 - POORLY CONCISE: The edited email is significantly wordy with substantial inefficiency. Contains: excessive redundancy, considerable filler content, over-elaboration of simple points, or repetitive phrasing. Message could be shortened by 30-50% without losing meaning.
+    
+    1 - NOT CONCISE: The edited email is extremely verbose and inefficient. Dominated by redundancy, excessive filler, unnecessary repetition, and over-elaboration. The core message is buried in wordiness. Could be shortened by more than 50% while retaining all important information.
+    
+    Note: Consider the action performed - shortening should result in scores of 4-5, tone changes should maintain reasonable conciseness, and lengthening may naturally score 3-4 if elaboration adds value rather than just wordiness.
+    
+    Provide both the numerical rating and a detailed explanation that effectively explains your rating.
+
+    The result should be in the following JSON format:
+    {{
+        "rating": <numerical rating from 1 to 5>,
+        "explanation": "<detailed explanation of the rating>"
+    }}
+
+precision_recall:
+  system: >
+    You are a helpful assistant that judges the precision and recall of an AI response when editing existing emails.
+    Precision measures whether the information included in the edited email is accurate and appropriate (no false positives - irrelevant or incorrect additions).
+    Recall measures whether all important information from the original email is retained in the edited email (no false negatives - missing critical content).
+    High precision means everything included should be there. High recall means nothing important is missing.
+    A well-edited email should balance both: including all necessary information (high recall) while avoiding unnecessary or incorrect additions (high precision).
+    Based on the original email, edited email, and the action performed, evaluate both precision and recall.
+    TO AID IN YOUR DECISION, YOU WILL RECEIVE THE FOLLOWING FORMATTED INPUT:
+    - The original email
+    - The edited email
+    - The action that was performed (shorten, lengthen, change tone)
+    - Criteria for judging precision and recall
+
+  user: >
+    ORIGINAL EMAIL
+    {original_email}
+
+    EDITED EMAIL
+    {edited_email}
+
+    ACTION PERFORMED
+    {action}
+
+    CRITERIA FOR JUDGING PRECISION AND RECALL
+    Your task is to rate both the precision and recall of the edited email on a scale from 1 TO 5 using the following strict criteria:
+    
+    PRECISION - Does the edited email contain only appropriate and accurate information?
+    
+    5 - PERFECT PRECISION: Every piece of information in the edited email is accurate, appropriate, and should be there. Zero fabrications, zero irrelevant additions, zero incorrect information. All content is warranted and valuable.
+    
+    4 - HIGH PRECISION: Nearly all content is appropriate with only minimal issues. May contain very minor unnecessary additions or slightly imprecise wording, but no fabrications or significantly irrelevant content.
+    
+    3 - MODERATE PRECISION: The edited email includes some inappropriate content. Issues may include: minor fabrications or assumptions, some off-topic additions, or information that doesn't belong. Roughly 10-25% of content has precision issues.
+    
+    2 - LOW PRECISION: Significant precision problems. Contains: multiple fabrications, considerable irrelevant content, incorrect information, or inappropriate additions. Roughly 25-50% of content has precision issues.
+    
+    1 - VERY LOW PRECISION: Dominated by precision problems. Extensive fabrications, mostly irrelevant content, substantial incorrect information. More than 50% of content should not be there.
+    
+    
+    RECALL - Does the edited email retain all important information from the original?
+    
+    5 - PERFECT RECALL: All important information from the original email is retained. Every critical detail, key point, essential context, action item, and important element is preserved. Nothing of significance is missing.
+    
+    4 - HIGH RECALL: Nearly all important information is retained. May omit only minor details that don't materially affect understanding or action. Roughly 90-99% of important content is preserved.
+    
+    3 - MODERATE RECALL: Some important information is missing. Omissions include secondary but still important details, relevant context, or supporting information. Roughly 70-89% of important content is preserved. Reader might need clarification.
+    
+    2 - LOW RECALL: Significant important information is missing. Multiple critical elements are omitted such as key action items, important dates, or essential context. Roughly 40-69% of important content is preserved. Reader would struggle to fully understand or respond.
+    
+    1 - VERY LOW RECALL: Most important information is missing. The edited email fails to capture the majority of critical content from the original. Less than 40% of important content is preserved. The edited email is inadequate for its purpose.
+    
+    
+    Provide ratings for both metrics along with detailed explanations.
+
+    The result should be in the following JSON format:
+    {{
+        "precision": {{
+            "rating": <numerical rating from 1 to 5>,
+            "explanation": "<detailed explanation of the precision rating>"
+        }},
+        "recall": {{
+            "rating": <numerical rating from 1 to 5>,
+            "explanation": "<detailed explanation of the recall rating>"
+        }}
+    }}
