@@ -1,12 +1,12 @@
 import streamlit as st
 import json
-from generate import GenerateEmail, evaluate_prompts, generate_new_emails
+from generate import GenerateEmail, evaluate_prompts, generate_new_emails,open_ai_deployment_name_2
 import os
 
 
 # --- CONFIG ---
 st.set_page_config(page_title="AI Email Editor", page_icon="📧", layout="wide")
-client = GenerateEmail(model=os.getenv("DEPLOYMENT_NAME"))
+client = GenerateEmail(model=open_ai_deployment_name_2)
 def get_emails(action,number_of_emails):
     
     emails ={}

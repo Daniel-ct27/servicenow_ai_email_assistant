@@ -2,9 +2,14 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import yaml
+import streamlit as st
 
 
 load_dotenv()
+open_ai_api_key = st.secrets["OPENAI_API_KEY"]
+open_ai_api_base = st.secrets["OPENAI_API_BASE"]
+open_ai_deployment_name = st.secrets["DEPLOYMENT_NAME"]
+open_ai_deployment_name_2 = st.secrets["DEPLOYMENT_NAME_2"]
 
 with open("prompts.yaml", "r") as f:
     prompts = yaml.safe_load(f)
@@ -13,8 +18,8 @@ class GenerateEmail():
     def __init__(self, model: str):
         # initialize client once and continually reuse to send prompts and receive response
         self.client = OpenAI(
-            base_url=os.getenv("OPENAI_API_BASE"),
-            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=open_ai_api_base,
+            api_key=open_ai_api_key,
         )
         self.deployment_name = model
 
@@ -79,19 +84,19 @@ class GenerateEmail():
         
 
 def evaluate_prompts(metric,edited_email,original_email,action):
-    client = GenerateEmail(os.getenv("DEPLOYMENT_NAME"))
+    client = GenerateEmail(open_ai_deployment_name_2)
     args = {
         "original_email": original_email,
         "edited_email": edited_email,
         "action": action
     }
     prompts2 = yaml.safe_load(open("judge_prompts.yaml"))
-    client2 = GenerateEmail(os.getenv("DEPLOYMENT_NAME_2"))
+    client2 = GenerateEmail(open_ai_deployment_name_2)
     result = client2.send_prompt(prompts2[metric]['user'].format(**args), prompts2[metric]['system'])
     return result[0].message.content
 
 def generate_new_emails(email_type, number_of_emails):
-    client = GenerateEmail(os.getenv("DEPLOYMENT_NAME_2"))
+    client = GenerateEmail(open_ai_deployment_name_2)
     prompts2 = yaml.safe_load(open("create_emails.yaml"))
     args = {
         "email_type": email_type,
