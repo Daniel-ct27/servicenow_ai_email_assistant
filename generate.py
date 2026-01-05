@@ -26,8 +26,6 @@ class GenerateEmail():
         response = self.client.chat.completions.create(
             model=self.deployment_name,
             messages=messages,
-            temperature=0.3,
-            max_tokens=500
         )
         return response.choices
         
@@ -90,5 +88,16 @@ def evaluate_prompts(metric,edited_email,original_email,action):
     prompts2 = yaml.safe_load(open("judge_prompts.yaml"))
     client2 = GenerateEmail(os.getenv("DEPLOYMENT_NAME_2"))
     result = client2.send_prompt(prompts2[metric]['user'].format(**args), prompts2[metric]['system'])
-    print(edited_email)
     return result[0].message.content
+
+def generate_new_emails(email_type, number_of_emails):
+    client = GenerateEmail(os.getenv("DEPLOYMENT_NAME_2"))
+    prompts2 = yaml.safe_load(open("create_emails.yaml"))
+    args = {
+        "email_type": email_type,
+        "number_of_emails": number_of_emails
+    }
+    result = client.send_prompt(prompts2['create_emails']['user'].format(**args), prompts2['create_emails']['system'])
+    return(result[0].message.content)
+
+

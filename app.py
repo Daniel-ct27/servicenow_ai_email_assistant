@@ -1,43 +1,55 @@
 import streamlit as st
 import json
-from generate import GenerateEmail, evaluate_prompts
+from generate import GenerateEmail, evaluate_prompts, generate_new_emails
 import os
 
 
 # --- CONFIG ---
 st.set_page_config(page_title="AI Email Editor", page_icon="📧", layout="wide")
 client = GenerateEmail(model=os.getenv("DEPLOYMENT_NAME"))
-def get_emails(file_path):
-    with open(file_path, 'r',encoding="utf-8") as f:   
-        emails = {}
-        for line in f.readlines():
-            email_record = json.loads(line)
-            email_id = email_record.get('id')
-            emails[email_id] = email_record
+def get_emails(action,number_of_emails):
+    
+    emails ={}
+    new_emails = json.loads(generate_new_emails(action,number_of_emails))
+    for record in new_emails:
+        email_id = record.get('id')
+        emails[email_id] = record
 
     return emails
 
-email_options = {"lengthen":get_emails('./datasets/lengthen.jsonl'),
-                "shorten":get_emails('./datasets/shorten.jsonl'),
-                "change tone": get_emails('./datasets/tone.jsonl')}
+        
+# --- INITIAL EMAIL FETCH (Compact) ---
+st.session_state.setdefault("emails", {})
+st.session_state.setdefault("emails_initialized", False)
+
+if not st.session_state.emails_initialized:
+    for action in ["lengthen", "shorten", "change tone"]:
+        st.session_state.emails[action] = get_emails(action, 25)
+    st.session_state.emails_initialized = True
+
+
+
+
+
+
 
 
 # --- UI HEADER ---
 st.title("📧 AI Email Editing Tool")
 st.write("Select an email record by ID and use AI to refine it.")
 
-if not email_options:
+if not st.session_state.emails:
     st.warning("No emails found in your JSONL file.")
     st.stop()
 
 # --- ID NAVIGATION BAR ---
 
-email_type = st.sidebar.selectbox("📂 Select Email Type", options=list(email_options.keys()), index=0)
-selected_id = st.sidebar.selectbox("📂 Select Email ID", options=email_options.get(email_type).keys(), index=0)
+email_type = st.sidebar.selectbox("📂 Select Email Type", options=list(st.session_state.emails.keys()))
+selected_id = st.sidebar.selectbox("📂 Select Email ID", options=st.session_state.emails[email_type].keys())
 metric_type = st.sidebar.selectbox("📂 Select Evaluation Metric", options=["faithfulness","completeness","relevance","conciseness","precision_recall"], index=0)
 
 # Find the selected email
-selected_email = email_options.get(email_type).get(selected_id)
+selected_email = st.session_state.emails[email_type][selected_id]
 if not selected_email:
     st.error(f"No email found with ID {selected_id}.")
     st.stop()
@@ -47,29 +59,19 @@ st.markdown(f"### ✉️ Email ID: `{selected_id}`")
 st.markdown(f"**From:** {selected_email.get('sender', '(unknown)')}")
 st.markdown(f"**Subject:** {selected_email.get('subject', '(no subject)')}")
 
-# ---- state init ----
-if "ai_result" not in st.session_state:
-    st.session_state.ai_result = ""
-if "metric_result" not in st.session_state:
-    st.session_state.metric_result = ""
-
-if "prev_context" not in st.session_state:
-    st.session_state.prev_context = (selected_id, email_type)
-
-if "prev_metric_context" not in st.session_state:
-    st.session_state.prev_metric_context = (selected_id, metric_type)
-
-# ---- reset when context changes ----
+# --- TRACK AI CONTEXT ---
 current_context = (selected_id, email_type)
-current_metric_context = (selected_id, metric_type)
+if ("selected_context" not in st.session_state) or st.session_state.selected_context != current_context:
+    st.session_state.ai_result = ""       # Reset AI result only when email/type changes
+    st.session_state.selected_context = current_context
 
-if st.session_state.prev_context != current_context:
-    st.session_state.ai_result = ""
-    st.session_state.prev_context = current_context
-
-if st.session_state.prev_metric_context != current_metric_context:
-    st.session_state.metric_result = ""
-    st.session_state.prev_metric_context = current_metric_context
+# --- TRACK METRIC CONTEXT ---
+# Reset metric evaluation box only when metric type changes
+if "metric_type" in locals():  # only if metric selectbox exists
+    if ("metric_context" not in st.session_state) or st.session_state.metric_context != metric_type:
+        st.session_state.metric_result = ""  # Clear evaluation box
+        st.session_state.metric_context = metric_type
+selected_email = st.session_state.emails[email_type][selected_id]
 
 email_text = st.text_area(
     "Email Content",
@@ -95,7 +97,9 @@ def evaluate_email_with_ai(metric,selected_email,email_type):
         return
     st.session_state.metric_result = evaluate_prompts(metric_type,st.session_state.ai_result,selected_email,email_type)
 
-ai_edit_button = st.button(f"{email_type.capitalize()} with AI",on_click=edit_email_with_ai,args=(email_type,email_text,))
+ai_edit_button = st.button(f"{email_type.capitalize()} with AI")
+if ai_edit_button:
+    edit_email_with_ai(email_type,email_text)
 
 
 if st.session_state.ai_result:
@@ -105,7 +109,9 @@ if st.session_state.ai_result:
         height=250,
     )
 if st.session_state.ai_result:
-    ai_evaluate_button = st.button(f"Evaluate with AI on {metric_type}",on_click=evaluate_email_with_ai,args=(metric_type,selected_email,email_type))
+    ai_evaluate_button = st.button(f"Evaluate with AI on {metric_type}")
+    if ai_evaluate_button:
+        evaluate_email_with_ai(metric_type,email_text,email_type)
 if st.session_state.metric_result:
     rating_info = json.loads(st.session_state.metric_result)
     st.text_area(
